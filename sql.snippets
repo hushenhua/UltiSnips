@@ -1,38 +1,46 @@
 snippet tbl
-	create table ${1:table} (
-		${0:columns}
-	)
+drop table ${1:tmp.table};
+create table $1 as
+select
+	${2:columns}
+from
+	${3:tab}
 endsnippet
-snippet col
-	${1:name}	${2:type}	${3:default ''}	${0:not null}
+
+snippet uid2cfrnid
+uid2cfrnid as (
+	select distinct
+	uid,
+		cfrnid
+	from
+		manhattan_dw.dim_mhloan_credit_cfrnid_uid_mapping_d_whole --uid转换成cfrnid
+	where
+		concat_ws('-',year,month,day) = '${1:2022-01-01}'
+)
 endsnippet
-snippet ccol
-	${1:name}	varchar2(${2:size})	${3:default ''}	${0:not null}
+
+snippet ymd
+concat_ws('-', year, month, day)
 endsnippet
-snippet ncol
-	${1:name}	number	${3:default 0}	${0:not null}
+
+snippet "ymd bt"
+concat_ws('-', year, month, day) between '${1:2022-01-01}' and '${2:2022-01-02}'
 endsnippet
-snippet dcol
-	${1:name}	date	${3:default sysdate}	${0:not null}
+
+snippet credit
+select distinct
+	cfrnid,
+	credit_line / 100 as credit_line,
+	row_number() over(partition by cfrnid order by success_time desc) as rn
+from
+	manhattan_dw.dwd_mhloan_user_credit_d_whole--授信明细表
+where
+	concat_ws('-', year, month, day) = '${1:2022-01-01}'
+	and product_id = 2001
+	and funds_channel_id = 3080
+	and credit_status = 1
 endsnippet
-snippet ind
-	create index ${0:$1_$2} on ${1:table}(${2:column});
-endsnippet
-snippet uind
-	create unique index ${1:name} on ${2:table}(${0:column});
-endsnippet
-snippet tblcom
-	comment on table ${1:table} is '${0:comment}';
-endsnippet
-snippet colcom
-	comment on column ${1:table}.${2:column} is '${0:comment}';
-endsnippet
-snippet addcol
-	alter table ${1:table} add (${2:column} ${0:type});
-endsnippet
-snippet seq
-	create sequence ${1:name} start with ${2:1} increment by ${3:1} minvalue ${0:1};
-endsnippet
-snippet s*
-	select * from ${0:table}
+
+snippet last_sunday
+date_sub(${1:start_date}, pmod(datediff($1, to_date('2012-01-01')), 7))
 endsnippet
